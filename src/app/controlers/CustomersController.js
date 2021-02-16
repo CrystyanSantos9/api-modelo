@@ -7,10 +7,7 @@ class CustomersController {
       limit:1000,
     })
 
-    
-
     return res.json(data);
-    console.warn(res)
   }
 
   // Recupera um Customer
