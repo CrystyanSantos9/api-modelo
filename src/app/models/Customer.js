@@ -32,11 +32,11 @@ class Customer extends Model {
             };
           },
         },
-        hooks: {
-          beforeValidate: (customer, options) => {
-            customer.status = "ARCHIVED";
-          },
-        },
+        // hooks: {
+        //   beforeValidate: (customer, options) => {
+        //     customer.status = "ARCHIVED";
+        //   },
+        // },
         sequelize,
         name: {
           singular: "customer",
