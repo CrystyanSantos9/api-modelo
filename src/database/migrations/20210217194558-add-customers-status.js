@@ -10,12 +10,11 @@ module.exports = {
   down: queryInterface => {
     return queryInterface.sequelize.transaction(async transaction => {
       await queryInterface.removeColumn("customers", "status", {
-        transaction
+        transaction,
       });
       await queryInterface.sequelize.query("DROP TYPE enum_customers_status", {
-        transaction
+        transaction,
       });
     });
   },
-
 };

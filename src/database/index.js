@@ -11,12 +11,22 @@ const models = [Customer, Contact, User];
 class Database {
   constructor() {
     this.connection = new Sequelize(config);
-    
+
     this.init();
+    this.associate();
   }
 
   init() {
     models.forEach(model => model.init(this.connection));
+  }
+
+  associate() {
+    models.forEach(model => {
+      // se o model tem o método de associação, então eu rodo a associação
+      if (model.associate) {
+        model.associate(this.connection.models);
+      }
+    });
   }
 }
 
