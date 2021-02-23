@@ -7,8 +7,7 @@ import { parseISO } from "date-fns";
 import * as Yup from "yup";
 import { Op } from "sequelize";
 
-import Contact from "../models/Contact";
-import Customer from "../models/Customer";
+import User from "../models/User";
 
 class ContactsController {
   // Listagem dos Customers
@@ -18,7 +17,6 @@ class ContactsController {
     const {
       name,
       email,
-      status,
       createdBefore,
       createdAfter,
       updatedBefore,
@@ -29,7 +27,7 @@ class ContactsController {
     const page = req.query.page || 1; // se não passar valor na query, o valor será 1 página
     const limit = req.query.limit || 25; // se não pssar valor na query, o valor será 25 registros
 
-    let where = { customer_id: req.params.customerId };
+    let where = {};
     let order = [];
 
     if (name) {
@@ -48,21 +46,6 @@ class ContactsController {
         email: {
           // valor capturado do where via spread operator
           [Op.iLike]: email, // capturando valor
-        },
-      };
-    }
-
-    // In aceita --> [Op.in]: ["ACTIVE", "ARCHIVED"], array que possuem o valor de busca
-    // vamos explodir o valor passado pela query
-    // localhost:3000/customers?status=active, archived (vai ser passado como uma única stringa separado por virgula)
-    // para pegarmos os valores como únicos, usamos o .split( , ) => ["active" , "archived"]
-    // e passamos para maísculo através do map para respeitar o case Sensitve dos enumerados do postgres
-    if (status) {
-      where = {
-        ...where, // campo que será concatenado (spread operator)
-        status: {
-          // valor capturado do where via spread operator
-          [Op.in]: status.split(",").map(item => item.toUpperCase()), // capturando valor, dividndo em valores únicos, tornando-os em maísculos
         },
       };
     }
@@ -116,15 +99,10 @@ class ContactsController {
       order = sort.split(",").map(item => item.split(":"));
     }
 
-    const data = await Contact.findAll({
+    const data = await User.findAll({
+      //tirando atributos de exibição
+      attributes: { exclude: ["password", "password_hash"] },
       where,
-      include: [
-        {
-          model: Customer,
-          attributes: ["id", "status"],
-          required: true,
-        },
-      ],
       order,
       limit,
       offset: limit * page - limit, //25 * 10 - 25
@@ -135,22 +113,17 @@ class ContactsController {
     return res.json(data);
   }
 
-  // Recupera um Contato
+  // Recuperando um usuário
   async show(req, res) {
-    const contact = await Contact.findOne({
-      where: {
-        customer_id: req.params.customerId,
-        id: req.params.id,
-      },
-      // include: [Customer],
-      attributes: { exclude: ["customer_id", "customerId"] },
-    });
+    const user = await User.findByPk(req.params.id);
 
-    if (!contact) {
+    if (!user) {
       return res.status(404).json();
     }
 
-    return res.json(contact);
+    const { id, name, email, createdAt, updatedAt } = user;
+
+    return res.json({ id, name, email, createdAt, updatedAt });
   }
 
   // Cria um novo Contact
@@ -161,7 +134,13 @@ class ContactsController {
       email: Yup.string()
         .email()
         .required(),
-      status: Yup.string().uppercase(),
+      password: Yup.string()
+        .required()
+        .min(8),
+      passwordConfirmation: Yup.string().when("password", (password, field) =>
+        //verifica se password foi preenchido, se não retorna o mesmo campo
+        password ? field.required().oneOf([Yup.ref("password")]) : field
+      ),
     });
 
     //Validando o schema
@@ -171,24 +150,11 @@ class ContactsController {
     }
 
     //se schema válido, passa if e vamos para o create
+    const { id, name, email, createdAt, updatedAt } = await User.create(
+      req.body
+    );
 
-    //recebemos todos os registros do req.body inclusive o id referente ao customer do contanto
-    //através de uma concatenação
-    try {
-      const contact = await Contact.create({
-        customer_id: req.params.customerId,
-        ...req.body, //concateno com customer_id
-      });
-
-      return res.status(201).json(contact);
-    } catch (e) {
-      return res.status(400).json({ error: e.errors });
-    }
-
-    // if (!contact){
-    //   console.log(contact)
-    //   return res.status(400).json({ error: "Error on validate schema." });
-    // }
+    return res.status(201).json({ id, name, email, createdAt, updatedAt });
   }
 
   // Atualiza um Customer
@@ -196,7 +162,16 @@ class ContactsController {
     const schema = Yup.object().shape({
       name: Yup.string(),
       email: Yup.string().email(),
-      status: Yup.string().uppercase(),
+      oldPassword: Yup.string().min(8),
+      password: Yup.string()
+        .min(8)
+        .when("oldPassword", (oldPassword, field) =>
+          oldPassword ? field.required() : field
+        ),
+      passwordConfirmation: Yup.string().when("password", (password, field) =>
+        //verifica se password foi preenchido, se não retorna o mesmo campo
+        password ? field.required().oneOf([Yup.ref("password")]) : field
+      ),
     });
 
     //Validando o schema
@@ -205,42 +180,39 @@ class ContactsController {
       return res.status(400).json({ error: "Error on validate schema." });
     }
 
-    //recuperar customer de acordo com id passado
-    const contact = await Contact.findOne({
-      where: {
-        customer_id: req.params.customerId,
-        id: req.params.id,
-      },
-      attributes: { exclude: ["customer_id", "customerId"] },
-    });
+    //recuperar user de acordo com id passado
+    const user = await User.findByPk(req.params.id);
 
-    //se costumer não existir
-    if (!contact) {
+    //se user não existir
+    if (!user) {
       return res.status(404).json();
     }
 
-    //realizando atualização
-    await contact.update(req.body);
+    //checando se o password é válido
+    const { oldPassword } = req.body;
 
-    return res.json(contact);
+    //se old password existir e o check não conferir --> retorna erro
+    if (oldPassword && !(await user.checkPassword(oldPassword))) {
+      return res.status(401).json({ error: "User password not match." });
+    }
+
+    //realizando atualização
+    const { id, name, email, createdAt, updatedAt } = await user.update(
+      req.body
+    );
+
+    return res.status(201).json({ id, name, email, createdAt, updatedAt });
   }
 
   // Exclui um Contact
   async destroy(req, res) {
-    //recuperando customer através do id passado
-    const contact = await Contact.findOne({
-      where: {
-        customer_id: req.params.customerId,
-        id: req.params.id,
-      },
-    });
+    const user = await User.findByPk(req.params.id);
 
-    //verifico se existe no banco
-    if (!contact) {
+    if (!user) {
       return res.status(404).json();
     }
 
-    await contact.destroy();
+    await user.destroy();
 
     return res.json();
   }
