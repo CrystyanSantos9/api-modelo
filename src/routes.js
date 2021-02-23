@@ -23,7 +23,7 @@ routes.delete("/customers/:customerId/contacts/:id", contacts.destroy);
 routes.get("/users", users.index);
 routes.get("/users/:id", users.show);
 routes.post("/users", users.create);
-// routes.put("/users/:id", users.update);
-// routes.delete("/users/:id", users.destroy);
+routes.put("/users/:id", users.update);
+routes.delete("/users/:id", users.destroy);
 
 export default routes;
