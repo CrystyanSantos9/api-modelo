@@ -108,7 +108,10 @@ class ContactsController {
       offset: limit * page - limit, //25 * 10 - 25
     });
 
-    console.log(where);
+    console.log({ userId: req.userId });
+    console.log(await User.findByPk(req.userId));
+
+    // console.log(where);
 
     return res.json(data);
   }
