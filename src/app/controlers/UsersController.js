@@ -6,6 +6,7 @@
 import { parseISO } from "date-fns";
 import * as Yup from "yup";
 import { Op } from "sequelize";
+import Mail from "../../lib/Mail";
 
 import User from "../models/User";
 
@@ -17,6 +18,7 @@ class ContactsController {
     const {
       name,
       email,
+      file_id,
       createdBefore,
       createdAfter,
       updatedBefore,
@@ -101,7 +103,7 @@ class ContactsController {
 
     const data = await User.findAll({
       //tirando atributos de exibição
-      attributes: { exclude: ["password", "password_hash"] },
+      attributes: { exclude: ["password", "password_hash", "fileId"] },
       where,
       order,
       limit,
@@ -118,7 +120,9 @@ class ContactsController {
 
   // Recuperando um usuário
   async show(req, res) {
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ["password", "password_hash"] },
+    });
 
     if (!user) {
       return res.status(404).json();
@@ -153,9 +157,20 @@ class ContactsController {
     }
 
     //se schema válido, passa if e vamos para o create
-    const { id, name, email, createdAt, updatedAt } = await User.create(
-      req.body
-    );
+    const {
+      id,
+      name,
+      email,
+      file_id,
+      createdAt,
+      updatedAt,
+    } = await User.create(req.body);
+
+    Mail.send({
+      to: email,
+      subject: "Bem vindo(a) ",
+      text: `Olá ${name}, seja bem-vindo(a) ao nosso sistema.`,
+    });
 
     return res.status(201).json({ id, name, email, createdAt, updatedAt });
   }
@@ -200,11 +215,18 @@ class ContactsController {
     }
 
     //realizando atualização
-    const { id, name, email, createdAt, updatedAt } = await user.update(
-      req.body
-    );
+    const {
+      id,
+      name,
+      email,
+      file_id,
+      createdAt,
+      updatedAt,
+    } = await user.update(req.body);
 
-    return res.status(201).json({ id, name, email, createdAt, updatedAt });
+    return res
+      .status(201)
+      .json({ id, name, email, file_id, createdAt, updatedAt });
   }
 
   // Exclui um Contact

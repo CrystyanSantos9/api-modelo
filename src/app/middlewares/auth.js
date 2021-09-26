@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { promisify } from "util";
 import authConfig from "../../config/authKey";
 
+// eslint-disable-next-line consistent-return
 export default async (req, res, next) => {
   const authHeather = req.headers.authorization;
   // Validar a existência do header de autorização
@@ -19,6 +20,7 @@ export default async (req, res, next) => {
   console.log(token);
 
   try {
+    
     const decoded = await promisify(jwt.verify)(token, authConfig.secret);
 
     // acrescentando propriedade userId no objeto req
