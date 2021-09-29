@@ -18,7 +18,6 @@ class ContactsController {
     const {
       name,
       email,
-      file_id,
       createdBefore,
       createdAfter,
       updatedBefore,
@@ -103,7 +102,7 @@ class ContactsController {
 
     const data = await User.findAll({
       //tirando atributos de exibição
-      attributes: { exclude: ["password", "password_hash", "fileId"] },
+      attributes: { exclude: ["password", "password_hash"] },
       where,
       order,
       limit,
@@ -128,14 +127,12 @@ class ContactsController {
       return res.status(404).json();
     }
 
-    const { id, name, email, createdAt, updatedAt } = user;
+    const { id, name, email, file_id,createdAt, updatedAt } = user;
 
-    return res.json({ id, name, email, createdAt, updatedAt });
+    return res.json({ id, name, email, file_id,createdAt, updatedAt });
   }
 
-  // Cria um novo Contact
   async create(req, res) {
-    //schema
     const schema = Yup.object().shape({
       name: Yup.string().required(),
       email: Yup.string()
@@ -145,32 +142,19 @@ class ContactsController {
         .required()
         .min(8),
       passwordConfirmation: Yup.string().when("password", (password, field) =>
-        //verifica se password foi preenchido, se não retorna o mesmo campo
         password ? field.required().oneOf([Yup.ref("password")]) : field
       ),
     });
 
-    //Validando o schema
-    //como trabalha com promisses, é necessário encapsular o seu retorno (schema check)
     if (!(await schema.isValid(req.body))) {
-      return res.status(400).json({ error: "Error on validate schema." });
+      return res.status(400).json({
+        error: "Error on validate schema.",
+      });
     }
 
-    //se schema válido, passa if e vamos para o create
-    const {
-      id,
-      name,
-      email,
-      file_id,
-      createdAt,
-      updatedAt,
-    } = await User.create(req.body);
-
-    Mail.send({
-      to: email,
-      subject: "Bem vindo(a) ",
-      text: `Olá ${name}, seja bem-vindo(a) ao nosso sistema.`,
-    });
+    const { id, name, email, createdAt, updatedAt } = await User.create(
+      req.body
+    );
 
     return res.status(201).json({ id, name, email, createdAt, updatedAt });
   }

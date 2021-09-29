@@ -11,8 +11,11 @@ class App {
     this.routes();
   }
 
+  //pondo as regras no método de checagem de requisição
   middlewares() {
     this.server.use(express.json());
+    //usado para fazer o reconhecimento do tipo de objeto solicitado e recebido
+    //durante requisições do tipo PUT e POST como string ou matrizes. 
     this.server.use(express.urlencoded({ extended: false }));
     // this.server.use(authMiddleware);
   }

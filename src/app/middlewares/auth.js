@@ -14,7 +14,7 @@ export default async (req, res, next) => {
 
   // Vem no formato
   // Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiaWF0IjoxNjE0MTkzNDkzLCJleHAiOjE2MTQ3OTgyOTN9.h-8MfAqD7jItTz0VU_jvrllFGJU2twVX11NBqs3V3Po
-
+//com isso desconstruimos o token
   const [, token] = authHeather.split(" ");
 
   console.log(token);
