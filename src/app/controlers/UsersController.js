@@ -7,8 +7,11 @@ import { parseISO } from "date-fns";
 import * as Yup from "yup";
 import { Op } from "sequelize";
 import Mail from "../../lib/Mail";
+import Queue from "../../lib/Queue";
 
 import User from "../models/User";
+
+import DummyJob from "../jobs/DummyJob";
 
 class ContactsController {
   // Listagem dos Customers
@@ -156,7 +159,17 @@ class ContactsController {
       req.body
     );
 
+    Mail.send({
+      to: email,
+      subject: "Bem vindo(a)",
+      text: `Olá ${name}, seja bem-vindo(a) ao nosso sistema.`
+    })
+
+    //instanciando e executando a adicao do job na fila de execucao
+    await Queue.add(DummyJob.key, {message: "Fila funcionando"});
+
     return res.status(201).json({ id, name, email, createdAt, updatedAt });
+  
   }
 
   // Atualiza um Customer
