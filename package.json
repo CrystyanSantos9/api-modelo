@@ -33,7 +33,7 @@
     "dev": "nodemon ./src/server.js",
     "prod":"sucrase-node ./src/server.js",
     "queue": "nodemon ./src/queue.js",
-    "prod-queue": "nodemon ./src/queue.js",
+    "prod-queue": "sucrase-node ./src/queue.js",
     "playground": "nodemon ./src/playground.js",
     "fix": "yarn eslint --fix src --ext .js"
   }

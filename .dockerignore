@@ -1,1 +1,14 @@
 node_modules
+.dockerignore
+.editorconfig
+.eslintrc.js
+.prettierrc
+app-dockerfile
+mysql-dockerfile
+relogio.js
+.git
+.gitignore
+fix_request_and_others_erros.diff
+iniciando_multer.diff
+mysql_redis_starter.sh
+starter-example.sh

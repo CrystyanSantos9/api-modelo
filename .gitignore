@@ -1,7 +1,3 @@
 node_modules
-src/config/authKey.js
-src/config/mail.js
-src/config/database.js
-src/config/mail.js
 .env
 relogio.js
