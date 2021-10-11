@@ -1,9 +1,11 @@
 import Bee from "bee-queue";
 
 import DummyJob from "../app/jobs/DummyJob";
+import WelcomeEmailJob from "../app/jobs/WelcomeEmailJob";
+
 import redisConfig from "../config/redis";
 
-const jobs = [DummyJob];
+const jobs = [DummyJob, WelcomeEmailJob];
 
 class Queue {
     constructor () {
@@ -35,7 +37,9 @@ class Queue {
       }
 
       handleFailure(job, err) {
-        console.error(`Queue ${job.queue.name}: FAILED `, err);
+        if(process.env.NODE_ENV === "development"){
+          console.error(`Queue ${job.queue.name}: FAILED `, err);
+        }
       }
 
 }
