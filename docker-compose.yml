@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+  nodejs:
+    build:
+      context: .
+      dockerfile: app-dockerfile
+    depends_on:
+      - db
+      - redis
+    image: cryssantos9/img-api-modelo 
+    container_name: ctn-api-modelo
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - PORT=$PORT
+      - APP_SECRET=$APP_SECRET
+      - DB_HOST=$DB_HOST
+      - DB_USER=$DB_USER
+      - DB_PASS=$DB_PASS
+      - DB_NAME=$DB_NAME
+      - REDIS_HOST=$REDIS_HOST
+      - REDIS_PORT=$REDIS_PORT
+      - MAIL_HOST=$MAIL_HOST
+      - MAIL_PORT=$MAIL_PORT
+      - MAIL_USER=$MAIL_USER
+      - MAIL_PASS=$MAIL_PASS
+      - SENTRY_DSN=$SENTRY_DSN
+    ports:
+      - "4000:8080"
+    volumes:
+      - .:/home/node/app
+      - node_modules:/home/node/app/node_modules
+    networks:
+      - rede-api-modelo
+  db:
+    image: csantos/bd-mysql
+    container_name: mysql-container
+    restart: unless-stopped
+    env_file: .env
+    environment:
+        - MYSQL_DATABASE=$DB_NAME
+        - MYSQL_ROOT_PASSWORD=$DB_PASS
+    volumes:
+      - dados-do-banco:/var/lib/mysql
+    networks:
+      - rede-api-modelo
+  redis:
+    image: redis  
+    container_name: redis-container
+    restart: unless-stopped
+    volumes:
+      - dados-da-fila-redis:/data
+    networks:
+      - rede-api-modelo
+
+networks:
+  rede-api-modelo:
+    driver: bridge
+
+volumes:
+  dados-do-banco:
+  dados-da-fila-redis:
+  node_modules:

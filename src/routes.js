@@ -15,6 +15,7 @@ const upload = multer(multerConfig);
 
 // Sessions
 routes.post("/sessions", sessions.create);
+routes.post("/users", users.create);
 // Controla o acesso a partir desse ponto
 routes.use(auth);
 
@@ -35,7 +36,7 @@ routes.delete("/customers/:customerId/contacts/:id", contacts.destroy);
 // Users
 routes.get("/users", users.index);
 routes.get("/users/:id", users.show);
-routes.post("/users", users.create);
+
 routes.put("/users/:id", users.update);
 routes.delete("/users/:id", users.destroy);
 
