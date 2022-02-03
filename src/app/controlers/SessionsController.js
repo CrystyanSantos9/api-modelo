@@ -8,7 +8,9 @@ class SessionsController {
   async create(req, res) {
     // pegando campos do corpo da requisição
     const { email, password } = req.body;
-
+    var clientIp = req.socket.remoteAddress;
+    var clientPort = req.socket.remotePort;
+    console.log(` Origin :: ${clientIp}:${clientPort}`)
     // verificando se email passado existe dentro do banco de dados
     const user = await User.findOne({
       where: { email }, // usando o nome da variável como o próprio parâmetro
