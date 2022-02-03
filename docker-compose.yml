@@ -28,6 +28,7 @@ services:
       - SENTRY_DSN=$SENTRY_DSN
     ports:
       - "4000:8080"
+    tty: true
     volumes:
       - .:/home/node/app
       - node_modules:/home/node/app/node_modules
